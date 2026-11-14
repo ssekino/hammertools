@@ -1,0 +1,100 @@
+MACBOOK SCROLL TOGGLE — staged, not activated
+
+Observed on this Mac (read-only checks, November 14, 2026):
+- macOS 26.5.2 (25F84).
+- Natural scrolling preference currently reads 1 (on).
+- Hammerspoon is not installed at /Applications/Hammerspoon.app.
+- hidutil identifies the connected Bluetooth Magic Mouse as usage page 1,
+  usage 2, without the Built-In flag. The internal trackpad has the same
+  mouse usage but explicitly has Built-In=true. The Magic Keyboard is excluded.
+
+BEHAVIOR
+No external mouse: natural scrolling on.
+Any external mouse: natural scrolling off FOR BOTH MOUSE AND TRACKPAD.
+This implements a connection-based global toggle, not independent per-device
+scroll directions. Hammerspoon documents the direction as system-wide.
+
+INSTALLATION — perform only when you choose to proceed
+1. Download the Lua-based Hammerspoon 1.x app from https://www.hammerspoon.org/
+   and place it in Applications. This configuration is not for Hammerspoon 2.
+2. Launch it. Grant Accessibility access when requested in System Settings >
+   Privacy & Security > Accessibility. Enabling this permission is your choice.
+3. Choose Open Config from the Hammerspoon menu. Preserve any existing init.lua.
+   Copy scroll-toggle.lua alongside init.lua in ~/.hammerspoon/.
+4. Add this line once to init.lua:
+
+   scrollToggle = require('scroll-toggle')
+
+5. Choose Reload Config and open Hammerspoon Console. Loading is PREVIEW ONLY.
+   It polls every five seconds; it does not modify preferences or open Settings.
+   Reloading always returns to preview mode.
+
+PREVIEW TESTS — no scrolling changes
+1. With the mouse connected, expect "External mouse = true" and its name in
+   Console. You can force a sample with: scrollToggle.scan()
+2. Turn off/disconnect the Magic Mouse. Within five seconds expect false.
+   Reconnect and expect true. A mouse already connected at startup is detected.
+3. Connect/disconnect any other mouse types you use (USB, Bluetooth, receiver).
+   Keep one connected while disconnecting another: the result must stay true.
+4. Test sleep/wake and a config reload. Polling resamples after wake.
+5. Do not activate until each detection transition is correct. In particular,
+   receivers may remain advertised as a mouse after the physical mouse is off;
+   a receiver may need unplugging. Virtual mice and some external trackpads can
+   advertise mouse usage. Detection reflects macOS HID presence, not physical
+   proximity. There is no universal receiver power-state detector here.
+
+ACTIVATION — only after explicit user confirmation
+In Hammerspoon Console run:
+
+   scrollToggle.enable()
+
+The first needed setting change will open System Settings > Trackpad and select
+Scroll & Zoom. macOS may ask permission for Hammerspoon/osascript to control
+System Events or System Settings; approve only if you wish to activate this.
+The script locates the English "Natural scrolling" checkbox and clicks only
+when its value differs. If the control cannot be found or the resulting
+system-wide direction cannot be verified, it stops and returns to preview.
+This UI step has NOT been executed or verified on your Mac. It may need an
+Accessibility-label adjustment for macOS 26 or another system language.
+It deliberately avoids relying on defaults write, which alone is not a
+verified live scrolling change. No logout or process termination is used.
+
+ACTIVE TESTS — after confirmation
+1. Start without any external mice; expect natural scrolling on.
+2. Connect the mouse. After two stable samples (roughly 5–10 seconds), expect
+   Settings to open and natural scrolling off. Test actual scrolling in Safari
+   and Finder with both mouse and trackpad.
+3. Disconnect all mice. Expect natural scrolling on after 5–10 seconds; verify
+   actual trackpad scrolling. Repeat with two mice, sleep/wake, and Bluetooth.
+4. If direction differs between apps, inspect other mouse utilities/drivers
+   before relying on this automation. A vendor utility may override the setting.
+5. Reload Config: preview resumes. To enable again, run enable() explicitly.
+   Only after successful testing and permission to run continuously should you
+   add scrollToggle.enable() after the require line and choose Launch at Login.
+
+STOP / REMOVE
+Run scrollToggle.disable() to stop changes. This retains the current setting;
+if a click was already performed it does not undo it. Restore your preferred
+Natural scrolling choice manually in Trackpad > Scroll & Zoom. This Mac's
+initial value was on. Remove the require/enable lines and Reload Config to
+remove the automation entirely; delete the copied module if desired.
+
+IMPLEMENTATION NOTES AND LIMITS
+Uses asynchronous hidutil polling, two-sample stability, exclusion of built-in
+HID devices, and no USB-only watcher (which would miss Bluetooth). Unknown or
+malformed detector output leaves the preference unchanged. A disconnected
+mouse that still appears in the HID registry cannot be distinguished from a
+present mouse. Repeated UI failures disable activation. Changing the preference
+manually while active will be overridden on a later poll. Settings may be
+brought to the foreground whenever the global preference needs changing.
+
+Validation completed: read-only hardware/OS/preference inspection, live HID
+NDJSON classification, and parser fixtures. Full Hammerspoon execution and UI
+setting changes remain untested; neither installation nor settings were changed.
+
+Primary references:
+https://www.hammerspoon.org/docs/hs.mouse
+https://www.hammerspoon.org/docs/hs.task.html
+https://www.hammerspoon.org/docs/hs.usb.watcher.html
+https://developer.apple.com/documentation/corehid/discoveringhiddevicesfromterminal
+https://support.apple.com/guide/mac-help/mchlp1226/mac
