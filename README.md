@@ -1,0 +1,2 @@
+# hammertools
+Macbook automations
