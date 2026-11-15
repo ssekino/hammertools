@@ -2,6 +2,20 @@
 
 MacBook automations using Hammerspoon.
 
+## Repository location
+
+Use `~/Codex/hammertools` as the persistent local repository root, including
+its `.git` directory. Make project changes here rather than in a dated chat
+workspace; use chat workspaces only for temporary files or deliverables.
+
+```sh
+cd ~/Codex/hammertools
+```
+
+The running Hammerspoon configuration lives separately in `~/.hammerspoon/`.
+Repository edits do not automatically update those installed copies; copy the
+changed configuration files there and reload Hammerspoon when deploying changes.
+
 ## Scroll toggle
 
 Hammerspoon 1.x configuration. Startup is always read-only preview mode.
