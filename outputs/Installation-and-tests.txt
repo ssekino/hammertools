@@ -51,11 +51,14 @@ In Hammerspoon Console run:
 The first needed setting change will open System Settings > Trackpad and select
 Scroll & Zoom. macOS may ask permission for Hammerspoon/osascript to control
 System Events or System Settings; approve only if you wish to activate this.
-The script locates the English "Natural scrolling" checkbox and clicks only
-when its value differs. If the control cannot be found or the resulting
+The navigator selects Scroll & Zoom using its accessibility description and
+locates NaturalScrollingToggle by identifier, with an accessible-label fallback.
+It presses the switch only when its value differs, then verifies the switch
+and live system-wide direction. If the control cannot be found or the resulting
 system-wide direction cannot be verified, it stops and returns to preview.
-This UI step has NOT been executed or verified on your Mac. It may need an
-Accessibility-label adjustment for macOS 26 or another system language.
+This UI step was verified in both directions on November 16, 2026, including
+physical Bluetooth mouse disconnection and reconnection. The tab label currently
+requires English System Settings.
 It deliberately avoids relying on defaults write, which alone is not a
 verified live scrolling change. No logout or process termination is used.
 
@@ -89,8 +92,10 @@ manually while active will be overridden on a later poll. Settings may be
 brought to the foreground whenever the global preference needs changing.
 
 Validation completed: read-only hardware/OS/preference inspection, live HID
-NDJSON classification, and parser fixtures. Full Hammerspoon execution and UI
-setting changes remain untested; neither installation nor settings were changed.
+NDJSON classification, and parser fixtures. The original staging checks did not modify settings. Follow-up validation on
+November 16, 2026 exercised Hammerspoon and the actual switch: on/off from
+another Trackpad tab, mouse powered off => natural on, mouse powered on =>
+natural off. Automation stayed enabled with no errors after both transitions.
 
 Primary references:
 https://www.hammerspoon.org/docs/hs.mouse
