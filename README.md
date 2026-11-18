@@ -42,8 +42,13 @@ System Settings → Privacy & Security → Accessibility. The navigator opens th
 selects Scroll & Zoom by its accessibility description, and finds the switch
 by `NaturalScrollingToggle` (with an accessible-label fallback). It verifies both
 the switch value and the live system scroll direction, allowing time for updates.
-Navigation is bounded by a timeout; errors pause automation and appear in Console
-and `scrollToggle.lastError`. Run `scrollToggle.enable()` after resolving an error.
+Navigation waits for a main/focused window before opening the pane, resolves
+fresh controls after tab changes, and retries an unchanged switch at most three
+times. It also handles cold launches where macOS reports an empty window list.
+Locked sessions defer changes. Transient navigation failures retry after 30
+seconds; three failed attempts pause automation. Missing Accessibility permission
+pauses immediately. Errors appear in Console and `scrollToggle.lastError`.
+Run `scrollToggle.enable()` after resolving a paused error.
 The English tab-label fallback currently requires an English System Settings UI.
 
 macOS exposes a system-wide natural scrolling direction. Enabling this
@@ -66,3 +71,43 @@ On November 16, 2026, the navigation fix passed live tests on macOS 26.5.2:
 
 The repository configuration still defaults to preview mode. The installed local
 configuration can explicitly enable automation after testing.
+
+
+## Failure diagnostics and session tests
+
+Navigation attempts record the pane, main/focused/window-list discovery,
+control roles/identifiers/labels/enabled states, checkbox and tab values,
+requested direction, process ID, and timed navigation steps. Reports stay local:
+
+- `~/.hammerspoon/scroll-toggle-diagnostics/latest-attempt.json`: most recent attempt.
+- `~/.hammerspoon/scroll-toggle-diagnostics/last-failure.json`: most recent failure,
+  retained even after later success. `scrollToggle.lastDiagnostic` points here.
+
+To capture the current pane without changing scrolling, use
+`scrollToggle.captureDiagnostics("manual inspection")` in Hammerspoon Console.
+Reports may contain Settings labels and account names; they are not committed or
+uploaded automatically. Editable field contents are excluded.
+
+On November 18, 2026, the previous navigator reproduced a timeout after a cold
+Settings launch: its window-list/first-window assumption did not yield usable
+Trackpad controls. The revised navigator passed three fresh Settings launches,
+a General-to-Trackpad transition, and both natural-scrolling values. Natural
+scrolling was restored on for the disconnected-mouse state. The real Bluetooth
+power-off/on transitions were previously verified on November 16.
+
+Run the isolated regression suite with Lua 5.4:
+
+```sh
+cd ~/Codex/hammertools
+lua tests/scroll-toggle-test.lua
+```
+
+Or in Hammerspoon Console:
+
+```lua
+dofile(os.getenv("HOME") .. "/Codex/hammertools/tests/scroll-toggle-test.lua")
+```
+
+The suite mocks all UI, timers, process launches, and diagnostic writes; it checks
+cold startup, empty window lists, nameless tabs, ignored presses, bounded retries,
+failure snapshots, permission failures, locked sessions, and cancellation.

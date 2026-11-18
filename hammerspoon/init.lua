@@ -9,6 +9,7 @@ hs.timer.doAfter(2, function()
         f:write('External mouse detected: ', tostring(scrollToggle.last), '\n')
         f:write('Natural scrolling: ', hs.mouse.scrollDirection(), '\n')
         f:write('Last error: ', tostring(scrollToggle.lastError), '\n')
+        f:write('Last diagnostic: ', tostring(scrollToggle.lastDiagnostic), '\n')
         f:close()
     end
 end)

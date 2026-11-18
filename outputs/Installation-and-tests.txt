@@ -55,7 +55,9 @@ The navigator selects Scroll & Zoom using its accessibility description and
 locates NaturalScrollingToggle by identifier, with an accessible-label fallback.
 It presses the switch only when its value differs, then verifies the switch
 and live system-wide direction. If the control cannot be found or the resulting
-system-wide direction cannot be verified, it stops and returns to preview.
+system-wide direction cannot be verified, it saves the exact pane and controls
+and retries after 30 seconds. Three failed attempts pause automation. Missing
+Accessibility permission pauses immediately; locked sessions defer changes.
 This UI step was verified in both directions on November 16, 2026, including
 physical Bluetooth mouse disconnection and reconnection. The tab label currently
 requires English System Settings.
@@ -103,3 +105,18 @@ https://www.hammerspoon.org/docs/hs.task.html
 https://www.hammerspoon.org/docs/hs.usb.watcher.html
 https://developer.apple.com/documentation/corehid/discoveringhiddevicesfromterminal
 https://support.apple.com/guide/mac-help/mchlp1226/mac
+
+NOVEMBER 18 SESSION RELIABILITY UPDATE
+Cold Settings startup exposed an empty-window/first-window assumption. Navigation
+now launches Settings first, waits for its main/focused window, opens Trackpad,
+selects Scroll & Zoom, re-resolves controls, and checks both switch and system
+scrolling direction. An unchanged switch can be pressed at most three times.
+
+Failure reports are local in ~/.hammerspoon/scroll-toggle-diagnostics/:
+latest-attempt.json records the latest attempt; last-failure.json retains the
+most recent failure even after success. Reports include pane/control metadata
+and timed steps; they are not automatically uploaded. See README for tests.
+
+Live validation passed three fresh Settings launches, navigation from General,
+and both scrolling values. Isolated regressions cover window discovery, ignored
+presses, bounded retries, failure capture, locking, permissions and cancellation.
